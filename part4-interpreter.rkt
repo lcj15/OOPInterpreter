@@ -1,7 +1,7 @@
 ; Liam Jeske
 ; If you are using scheme instead of racket, comment these two lines, uncomment the (load "simpleParser.scm") and comment the (require "simpleParser.rkt")
 #lang racket
-(require "functionParser.rkt")
+(require "classParser.rkt")
 ; (load "simpleParser.scm")
 
 
