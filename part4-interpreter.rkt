@@ -2,7 +2,6 @@
 ; If you are using scheme instead of racket, comment these two lines, uncomment the (load "simpleParser.scm") and comment the (require "simpleParser.rkt")
 #lang racket
 (require "classParser.rkt")
-; (load "simpleParser.scm")
 
 
 ; An interpreter for the simple language that uses call/cc for the continuations.  Does not handle side effects.
@@ -24,6 +23,20 @@
                                   (lambda (env) (myerror "Break used outside of loop"))
                                   (lambda (env) (myerror "Continue used outside of loop"))
                                   (lambda (v env) (myerror "Uncaught exception thrown"))))))))
+
+(define newClosure
+  (lambda ()
+    '(()()()()) ))
+
+;(define understandClassClosure
+;  (lambda (statement)
+(define createClassClosure
+  (lambda (parentClass methods fields instances) 
+    (append ( append (append (list parentClass) (list methods)) (list fields) ) (list instances))))
+
+(define createClass
+  (lambda (name classClosure)
+    (append (list (list name)) (list classClosure))))
 
 (define environment-after-outer-layer
   (lambda (parse-tree empty-environment)
@@ -56,18 +69,19 @@
 (define interpret-statement
   (lambda (statement environment return break continue throw)
     (cond
-      ((eq? 'return (statement-type statement)) (interpret-return statement environment return throw))
-      ((eq? 'var (statement-type statement)) (interpret-declare statement environment throw))
-      ((eq? '= (statement-type statement)) (interpret-assign statement environment throw))
-      ((eq? 'if (statement-type statement)) (interpret-if statement environment return break continue throw))
-      ((eq? 'while (statement-type statement)) (interpret-while statement environment return throw))
-      ((eq? 'continue (statement-type statement)) (continue environment))
-      ((eq? 'break (statement-type statement)) (break environment))
-      ((eq? 'begin (statement-type statement)) (interpret-block statement environment return break continue throw))
-      ((eq? 'throw (statement-type statement)) (interpret-throw statement environment throw))
-      ((eq? 'try (statement-type statement)) (interpret-try statement environment return break continue throw))
-      ((eq? 'function (statement-type statement))(interpret-function statement environment))
-      ((eq? 'funcall (statement-type statement))(function-execution statement environment throw))
+      ((eq? 'return (statement-type statement))     (interpret-return statement environment return throw))
+      ((eq? 'var (statement-type statement))        (interpret-declare statement environment throw))
+      ((eq? '= (statement-type statement))          (interpret-assign statement environment throw))
+      ((eq? 'if (statement-type statement))         (interpret-if statement environment return break continue throw))
+      ((eq? 'while (statement-type statement))      (interpret-while statement environment return throw))
+      ((eq? 'continue (statement-type statement))   (continue environment))
+      ((eq? 'break (statement-type statement))      (break environment))
+      ((eq? 'begin (statement-type statement))      (interpret-block statement environment return break continue throw))
+      ((eq? 'throw (statement-type statement))      (interpret-throw statement environment throw))
+      ((eq? 'try (statement-type statement))        (interpret-try statement environment return break continue throw))
+      ((eq? 'function (statement-type statement))   (interpret-function statement environment))
+      ((eq? 'funcall (statement-type statement))    (function-execution statement environment throw))
+   ;   ((eq? 'class (statement-type statement))      (createClass (cadar statement) (createClassClosure
       (else (myerror "Unknown statement:" (statement-type statement))))))
 
 (define function-execution
@@ -90,6 +104,7 @@
       ((not (eq? (length params) (length args))) (error "number of parameters and arguments doesn't match"))
       ((null? params) fstate)
       (else (bind-parameters (cdr params) (cdr args) (insert (car params) (eval-expression (car args) environment throw) fstate) environment throw)))))
+
 ;M-state for handling function call
 (define interpret-function
   (lambda (statement environment)
@@ -102,6 +117,7 @@
 (define get-active-bindings
   (lambda (environment)
     environment))
+
 ; Calls the return continuation with the given expression value
 (define interpret-return
   (lambda (statement environment return throw)
@@ -227,15 +243,15 @@
 (define eval-binary-op2
   (lambda (expr op1value environment throw)
     (cond
-      ((eq? '+ (operator expr)) (+ op1value (eval-expression (operand2 expr) environment throw)))
-      ((eq? '- (operator expr)) (- op1value (eval-expression (operand2 expr) environment throw)))
-      ((eq? '* (operator expr)) (* op1value (eval-expression (operand2 expr) environment throw)))
-      ((eq? '/ (operator expr)) (quotient op1value (eval-expression (operand2 expr) environment throw)))
-      ((eq? '% (operator expr)) (remainder op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '+ (operator expr))  (+ op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '- (operator expr))  (- op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '* (operator expr))  (* op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '/ (operator expr))  (quotient op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '% (operator expr))  (remainder op1value (eval-expression (operand2 expr) environment throw)))
       ((eq? '== (operator expr)) (isequal op1value (eval-expression (operand2 expr) environment throw)))
       ((eq? '!= (operator expr)) (not (isequal op1value (eval-expression (operand2 expr) environment throw))))
-      ((eq? '< (operator expr)) (< op1value (eval-expression (operand2 expr) environment throw)))
-      ((eq? '> (operator expr)) (> op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '< (operator expr))  (< op1value (eval-expression (operand2 expr) environment throw)))
+      ((eq? '> (operator expr))  (> op1value (eval-expression (operand2 expr) environment throw)))
       ((eq? '<= (operator expr)) (<= op1value (eval-expression (operand2 expr) environment throw)))
       ((eq? '>= (operator expr)) (>= op1value (eval-expression (operand2 expr) environment throw)))
       ((eq? '|| (operator expr)) (or op1value (eval-expression (operand2 expr) environment throw)))
@@ -456,6 +472,4 @@
       (error-break (display (string-append str (makestr "" vals)))))))
 
 
-;--------------------------------------------------------------------
-(parser "test.txt")
-(interpret "test.txt")
+;
