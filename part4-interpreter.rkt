@@ -50,7 +50,8 @@
 
 (define testClosure
   (lambda()
-    '(() ((x)(10))()()) ))
+   '(() ((z) (10)) (() ()) (() ()) (() ()))  ))
+
 (define newClosure
   (lambda ()
     (list '() (newframe) (newframe) (newframe)) ))
