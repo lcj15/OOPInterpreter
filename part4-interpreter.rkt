@@ -24,12 +24,76 @@
                                   (lambda (env) (myerror "Continue used outside of loop"))
                                   (lambda (v env) (myerror "Uncaught exception thrown"))))))))
 
+(define newClassDef
+  (lambda (name)
+    (list (list name) (newClosure))))
+
+; add parent class at some point
+;(define interpret-class-body
+ ; (lambda (statement closure throw)
+  ;  ((eq? 'var (statement-type statement)) (interpret-declare-in-class statement closure))
+   ; ((eq? 'static-function (statement-type statement)) (interpret-function statement environment))))
+                                                        
+(define interpret-declare-in-class
+  (lambda (statement closure)
+    (if (exists-declare-value? statement)
+        (addFieldsToClosure (car (interpret-declare statement (list (getFieldsFromClosure closure)) (lambda (v) v))) closure  )
+      5 )))
+
+
+        
+ ;       (addFieldsToClosure (insert (get-declare-var statement) (eval-expression (get-declare-value statement) (getFieldsFromClosure closure) (getFieldsFromClosure closure))
+  ;                                  (getFieldsFromClosure closure)) closure)
+   ;     (insert (get-declare-var statement) 'novalue (getFieldsFromClosure closure)))))
+;(define interpret-classBody
+
+
+(define testClosure
+  (lambda()
+    '(() ((x)(10))()()) ))
 (define newClosure
   (lambda ()
-    '(()()()()) ))
+    (list '() (newframe) (newframe) (newframe)) ))
 
-;(define understandClassClosure
-;  (lambda (statement)
+
+
+(define testing123
+  (lambda ()
+    '((parent) (fields) (functions) (instances))))
+
+(define getClassName cadr)
+(define getParent caddr)
+
+(define getParentClassFromClosure car)
+
+(define addParentClassToClosure
+  (lambda (parent classClosure)
+    (insertAt (cons parent (getParentClassFromClosure classClosure)) 0 (newClosure))))
+
+(define getFieldsFromClosure cadr)
+
+(define addFieldsToClosure
+  (lambda (fields classClosure)
+    (insertAt (list (append (car fields) (car (getFieldsFromClosure classClosure))) (append (cadr fields)
+                      (cadr (getFieldsFromClosure classClosure) ))) 1 (newClosure))))
+
+(define getFunctionFromClosure caddr)
+
+
+(define getInstancesFromClosure cadddr)
+
+
+; Delete this
+(define understandClassBody
+  (lambda (statement)
+    (cond
+      ((eq? 'var (statement-type statement)) )
+      ((eq? 'function (statement-type statement)) )
+      ((eq? 'static-function (statement-type statement)) ))))
+      
+      
+
+    
 (define createClassClosure
   (lambda (parentClass methods fields instances) 
     (append ( append (append (list parentClass) (list methods)) (list fields) ) (list instances))))
@@ -69,6 +133,7 @@
 (define interpret-statement
   (lambda (statement environment return break continue throw)
     (cond
+    ;  ((eq? 'class (statement-type statement))      (interpret-class statement environment))
       ((eq? 'return (statement-type statement))     (interpret-return statement environment return throw))
       ((eq? 'var (statement-type statement))        (interpret-declare statement environment throw))
       ((eq? '= (statement-type statement))          (interpret-assign statement environment throw))
@@ -81,9 +146,10 @@
       ((eq? 'try (statement-type statement))        (interpret-try statement environment return break continue throw))
       ((eq? 'function (statement-type statement))   (interpret-function statement environment))
       ((eq? 'funcall (statement-type statement))    (function-execution statement environment throw))
-   ;   ((eq? 'class (statement-type statement))      (createClass (cadar statement) (createClassClosure
       (else (myerror "Unknown statement:" (statement-type statement))))))
 
+
+  
 (define function-execution
   (lambda (statement environment throw)
     (let* ((closure (lookup-in-env (cadr statement) environment))
@@ -108,9 +174,9 @@
 ;M-state for handling function call
 (define interpret-function
   (lambda (statement environment)
-    (insert (cadr statement) (make-closure (caddr statement) (cadddr statement)) environment)))
+    (insert (cadr statement) (make-funcclosure (caddr statement) (cadddr statement)) environment)))
 
-(define make-closure
+(define make-funcclosure
   (lambda (formal-param body)
     (list formal-param body get-active-bindings)))
 
@@ -126,7 +192,7 @@
 ; Adds a new variable binding to the environment.  There may be an assignment with the variable
 (define interpret-declare
   (lambda (statement environment throw)
-    (if (exists-declare-value? statement)
+    (if (exists-declare-value? statement)       
         (insert (get-declare-var statement) (eval-expression (get-declare-value statement) environment throw) environment)
         (insert (get-declare-var statement) 'novalue environment))))
 
@@ -399,6 +465,14 @@
     (if (exists-in-list? var (variables (car environment)))
         (myerror "error: variable is being re-declared:" var)
         (cons (add-to-frame var val (car environment)) (cdr environment)))))
+
+
+(define insertAt
+  (lambda ( a n lis)
+    (cond ((null? lis) (list a))
+          ((zero? n) (cons a lis))
+          (else (cons (car lis)(insertAt a (- n 1) (cdr lis)))))))
+      
 
 ; Changes the binding of a variable to a new value in the environment.  Gives an error if the variable does not exist.
 (define update
