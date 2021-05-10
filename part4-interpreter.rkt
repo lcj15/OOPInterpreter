@@ -1,4 +1,4 @@
-; Liam Jeske
+; Liam Jeske Ergis Mecaj
 ; If you are using scheme instead of racket, comment these two lines, uncomment the (load "simpleParser.scm") and comment the (require "simpleParser.rkt")
 #lang racket
 (require "classParser.rkt")
@@ -24,25 +24,42 @@
                                   (lambda (env) (myerror "Continue used outside of loop"))
                                   (lambda (v env) (myerror "Uncaught exception thrown"))))))))
 
-(define newClassDef
-  (lambda (name)
-    (list (list name) (newClosure))))
+(define insertAt
+  (lambda ( a n lis)
+    (cond ((null? lis) (list a))
+          ((zero? n) (cons a lis))
+          (else (cons (car lis)(insertAt a (- n 1) (cdr lis)))))))
+
+
+; retrieve the closure for a given class name
+(define retrieveEnvironment
+  (lambda (className environment)
+    (lookup className (cadr environment))))
 
 ; add parent class at some point
 (define interpret-class
   (lambda (statement environment)
-    (insert (getClassName statement) (newClosure) environment)))
+    (insert (getClassName statement) (list (getParent statement) (car (interpret-ClassBody (getClassBody statement) environment (getClassName statement)))))))
+
+; should return a "package" that contains the rest of the class closure
+(define interpret-ClassBody
+  (lambda (statement environment)
+    (interpret-statement-list statement environment)))
+    
+
 ;  (lambda (statement environment)
 ;    (getClassname statement)
 ;    
 ;    ((eq? 'var (statement-type statement)) (interpret-declare-in-class statement closure))
 ;    ((eq? 'static-function (statement-type statement)) (interpret-function statement environment))))
-                                                        
+
+
+; this handles declare statements that are inside the classes but not inside functions
 (define interpret-declare-in-class
   (lambda (statement closure)
     (if (exists-declare-value? statement)
         (addFieldsToClosure (car (interpret-declare statement (newenvironment) (lambda (v) v))) closure  )
-    ( myerror "bad" ))))
+        ( myerror "bad" ))))
 
 
         
@@ -66,10 +83,13 @@
   (lambda ()
     '((parent) (fields) (functions) (instances))))
 
+; abstractions
 (define getClassName cadr)
 (define getParent caddr)
+(define getClassBody cadddr)
 
 (define getParentClassFromClosure car)
+
 
 (define addParentClassToClosure
   (lambda (parent classClosure)
@@ -172,7 +192,9 @@
 ;M-state for handling function call
 (define interpret-function
   (lambda (statement environment)
-    (insert (cadr statement) (make-funcclosure (caddr statement) (cadddr statement)) environment)))
+    (insert (cadr statement) (make-funcclosure (caddr statement) (cadddr statement)) )))
+
+
 
 (define make-funcclosure
   (lambda (formal-param body)
@@ -465,11 +487,7 @@
         (cons (add-to-frame var val (car environment)) (cdr environment)))))
 
 
-(define insertAt
-  (lambda ( a n lis)
-    (cond ((null? lis) (list a))
-          ((zero? n) (cons a lis))
-          (else (cons (car lis)(insertAt a (- n 1) (cdr lis)))))))
+
       
 
 ; Changes the binding of a variable to a new value in the environment.  Gives an error if the variable does not exist.
