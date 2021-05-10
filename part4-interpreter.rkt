@@ -53,16 +53,20 @@
     (list (list name) (newClosure))))
 
 ; add parent class at some point
-;(define interpret-class-body
- ; (lambda (statement closure throw)
-  ;  ((eq? 'var (statement-type statement)) (interpret-declare-in-class statement closure))
-   ; ((eq? 'static-function (statement-type statement)) (interpret-function statement environment))))
+(define interpret-class
+  (lambda (statement environment)
+    (insert (getClassName statement) (newClosure) environment)))
+;  (lambda (statement environment)
+;    (getClassname statement)
+;    
+;    ((eq? 'var (statement-type statement)) (interpret-declare-in-class statement closure))
+;    ((eq? 'static-function (statement-type statement)) (interpret-function statement environment))))
                                                         
 (define interpret-declare-in-class
   (lambda (statement closure)
     (if (exists-declare-value? statement)
-        (addFieldsToClosure (car (interpret-declare statement (list (getFieldsFromClosure closure)) (lambda (v) v))) closure  )
-      5 )))
+        (addFieldsToClosure (car (interpret-declare statement (newenvironment) (lambda (v) v))) closure  )
+    ( myerror "bad" ))))
 
 
         
@@ -107,21 +111,12 @@
 
 (define getInstancesFromClosure cadddr)
 
-
-; Delete this
-(define understandClassBody
-  (lambda (statement)
-    (cond
-      ((eq? 'var (statement-type statement)) )
-      ((eq? 'function (statement-type statement)) )
-      ((eq? 'static-function (statement-type statement)) ))))
       
       
 
-    
-(define createClassClosure
-  (lambda (parentClass methods fields instances) 
-    (append ( append (append (list parentClass) (list methods)) (list fields) ) (list instances))))
+;(define createClassClosure
+;  (lambda (parentClass methods fields instances) 
+;    (append ( append (append (list parentClass) (list methods)) (list fields) ) (list instances))))
 
 (define createClass
   (lambda (name classClosure)
@@ -158,7 +153,9 @@
 (define interpret-statement
   (lambda (statement environment return break continue throw)
     (cond
-    ;  ((eq? 'class (statement-type statement))      (interpret-class statement environment))
+      ((eq? 'class (statement-type statement))      (interpret-class statement environment))
+    ;  ((eq? 'new (statement-type statement))        (interpret-instance statement environment))
+   ;   ((eq? 'dot (statement-type statement))        (interpret-dot      statement environment))
       ((eq? 'return (statement-type statement))     (interpret-return statement environment return throw))
       ((eq? 'var (statement-type statement))        (interpret-declare statement environment throw))
       ((eq? '= (statement-type statement))          (interpret-assign statement environment throw))
