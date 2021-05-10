@@ -43,11 +43,6 @@
 
 (define statement-begin cadr)
 
-(define interpret-class
-  (lambda (class class-closure-list environment)
-    ;add binding class-name make-class-closure environment
-    (append (createClassClosure class) environment)))
-
 (define newClassDef
   (lambda (name)
     (list (list name) (newClosure))))
