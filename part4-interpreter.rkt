@@ -37,9 +37,9 @@
     (lookup className (cadr environment))))
 
 ; add parent class at some point
-(define interpret-class
-  (lambda (statement environment)
-    (insert (getClassName statement) (list (getParent statement) (car (interpret-ClassBody (getClassBody statement) environment (getClassName statement)))))))
+;(define interpret-class
+;  (lambda (statement environment)
+;    (insert (getClassName statement) (list (getParent statement) (car (interpret-ClassBody (getClassBody statement) environment (getClassName statement)))))))
 
 ; should return a "package" that contains the rest of the class closure
 (define interpret-ClassBody
