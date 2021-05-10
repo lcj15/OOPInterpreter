@@ -12,17 +12,17 @@
 ; The functions that start eval-...  all return a value
 
 ; The main function.  Calls parser to get the parse tree and interprets it with a new environment.  The returned value is in the environment.
-(define interpret
-  (lambda (file)
-    (scheme->language
-     (call/cc
-      (lambda (return)
-        (interpret-statement-list (cadr (lookup-in-env 'main (environment-after-outer-layer (parser file) (newenvironment))))
-                                  (environment-after-outer-layer (parser file) (newenvironment))
-                                  return
-                                  (lambda (env) (myerror "Break used outside of loop"))
-                                  (lambda (env) (myerror "Continue used outside of loop"))
-                                  (lambda (v env) (myerror "Uncaught exception thrown"))))))))
+;(define interpret
+;  (lambda (file)
+;    (scheme->language
+;     (call/cc
+;      (lambda (return)
+;        (interpret-statement-list (cadr (lookup-in-env 'main (environment-after-outer-layer (parser file) (newenvironment))))
+;                                  (environment-after-outer-layer (parser file) (newenvironment))
+;                                  return
+;                                  (lambda (env) (myerror "Break used outside of loop"))
+;;                                  (lambda (env) (myerror "Continue used outside of loop"))
+ ;                                 (lambda (v env) (myerror "Uncaught exception thrown"))))))))
 
 (define insertAt
   (lambda ( a n lis)
