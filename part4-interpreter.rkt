@@ -1,5 +1,4 @@
-; Liam Jeske
-; If you are using scheme instead of racket, comment these two lines, uncomment the (load "simpleParser.scm") and comment the (require "simpleParser.rkt")
+; Ergis Mecaj, Liam Jeske
 #lang racket
 (require "classParser.rkt")
 
@@ -13,16 +12,41 @@
 
 ; The main function.  Calls parser to get the parse tree and interprets it with a new environment.  The returned value is in the environment.
 (define interpret
-  (lambda (file)
+  (lambda (file class-name)
     (scheme->language
      (call/cc
       (lambda (return)
-        (interpret-statement-list (cadr (lookup-in-env 'main (environment-after-outer-layer (parser file) (newenvironment))))
-                                  (environment-after-outer-layer (parser file) (newenvironment))
+        (interpret-class-list (parser file)
+                                  newenvironment
                                   return
                                   (lambda (env) (myerror "Break used outside of loop"))
                                   (lambda (env) (myerror "Continue used outside of loop"))
-                                  (lambda (v env) (myerror "Uncaught exception thrown"))))))))
+                                  (lambda (v env) (myerror "Uncaught exception thrown"))
+                                  (string->symbol class-name)))))))
+
+
+;replace environment-after-outer-layer to the class closure of the class name
+(define interpret-class-list
+  (lambda (class-list environment return break continue throw class-name)
+    (cond
+      [(null? class-list) (interpret-statement-list ;find main function, run what's inside the function (car (class-list))
+                                                    ;take state, find class closure of class-name, find main function closure within class
+                                                    ;function-execution (main-function-closure)
+
+                                                    ;statement-list: body of main function
+                                                    (cadr (lookup-in-env 'main (getClassName (class-list)) (newenvironment)))
+                                                    ;environment with class closures inserted
+                                                    environment
+                                                    return break continue throw)]
+      [else (interpret-class ((car class-list) environment))])))
+
+
+(define statement-begin cadr)
+
+(define interpret-class
+  (lambda (class class-closure-list environment)
+    ;add binding class-name make-class-closure environment
+    (append (createClassClosure class) environment)))
 
 (define newClassDef
   (lambda (name)
